@@ -1,0 +1,10 @@
+.env
+client_secret*.json
+token.json
+data/*.db
+data/reports/
+work/
+incoming/
+uploaded/
+__pycache__/
+*.pyc
