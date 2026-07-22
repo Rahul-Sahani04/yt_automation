@@ -54,6 +54,7 @@ def run_once(on_progress=None) -> bool:
     letting callers (e.g. the dashboard) render live progress.
     """
     db.init_db()
+    nim_client.load_skills()
     video_path = _next_video_file()
     if video_path is None:
         logger.info("No video files waiting in %s", config.SOURCE_DIR)

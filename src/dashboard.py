@@ -9,7 +9,7 @@ import streamlit as st
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from googleapiclient.discovery import build
 
-from src import auth, config, db, pipeline
+from src import auth, config, db, nim_client, pipeline
 
 STAGE_LABELS = {
     "extract_audio": "Extract audio",
@@ -22,6 +22,7 @@ STAGE_LABELS = {
 
 st.set_page_config(page_title="YT AI Upload Automation", layout="wide")
 db.init_db()
+nim_client.load_skills()
 
 
 def fetch_runs():

@@ -20,6 +20,11 @@ YT_TOKEN_FILE = os.environ.get("YT_TOKEN_FILE", str(BASE_DIR / "token.json"))
 YT_SCOPES = [
     "https://www.googleapis.com/auth/youtube.upload",
     "https://www.googleapis.com/auth/youtube.readonly",
+    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
+
+    # Edit Videos
+    
 ]
 
 SOURCE_DIR = Path(os.environ.get("SOURCE_DIR", str(BASE_DIR / "incoming")))
@@ -28,6 +33,8 @@ WORK_DIR = Path(os.environ.get("WORK_DIR", str(BASE_DIR / "work")))
 
 DB_PATH = os.environ.get("DB_PATH", str(BASE_DIR / "data" / "runs.db"))
 REPORT_DIR = Path(os.environ.get("REPORT_DIR", str(BASE_DIR / "data" / "reports")))
+SKILLS_DIR = Path(os.environ.get("SKILLS_DIR", str(BASE_DIR / "src" / "skills")))
 
-for d in (SOURCE_DIR, UPLOADED_DIR, WORK_DIR, REPORT_DIR):
+for d in (SOURCE_DIR, UPLOADED_DIR, WORK_DIR, REPORT_DIR, SKILLS_DIR):
     d.mkdir(parents=True, exist_ok=True)
+
