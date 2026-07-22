@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 import shutil
 import subprocess
@@ -69,20 +70,41 @@ def run_once(on_progress=None) -> bool:
         with _timed_stage(run_id, "transcribe", on_progress):
             transcript = gemini_client.transcribe_audio(str(audio_path))
 
-        with _timed_stage(run_id, "generate_metadata", on_progress):
-            title = nim_client.generate_title(transcript)
-            description = nim_client.generate_description(transcript)
-            tags = nim_client.generate_tags(transcript)
-
         creds = auth.get_credentials()
 
-        with _timed_stage(run_id, "upload", on_progress):
-            video_id = youtube_uploader.upload_video(
-                creds, str(video_path), title, description, tags, privacy_status="unlisted"
+        with _timed_stage(run_id, "upload_and_generate_metadata", on_progress):
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                placeholder_title = video_path.stem[:100]
+                upload_future = executor.submit(
+                    youtube_uploader.upload_video,
+                    creds,
+                    str(video_path),
+                    title=placeholder_title,
+                    description="Uploading video...",
+                    tags=[],
+                    privacy_status="unlisted",
+                )
+
+                def _gen_metadata():
+                    with concurrent.futures.ThreadPoolExecutor(max_workers=3) as meta_executor:
+                        f_title = meta_executor.submit(nim_client.generate_title, transcript)
+                        f_desc = meta_executor.submit(nim_client.generate_description, transcript)
+                        f_tags = meta_executor.submit(nim_client.generate_tags, transcript)
+                        return f_title.result(), f_desc.result(), f_tags.result()
+
+                metadata_future = executor.submit(_gen_metadata)
+
+                video_id = upload_future.result()
+                title, description, tags = metadata_future.result()
+
+        with _timed_stage(run_id, "update_metadata", on_progress):
+            youtube_uploader.update_video_metadata(
+                creds, video_id, title, description, tags
             )
 
         with _timed_stage(run_id, "wait_processing", on_progress):
             processed = youtube_uploader.wait_until_processed(creds, video_id)
+
 
         if not processed:
             db.finish_run(run_id, "failed", video_id=video_id, error="processing_failed")

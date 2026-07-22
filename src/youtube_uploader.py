@@ -79,3 +79,19 @@ def set_privacy_status(creds, video_id: str, status: str = "public"):
     _service(creds).videos().update(
         part="status", body={"id": video_id, "status": {"privacyStatus": status}}
     ).execute()
+
+
+def update_video_metadata(creds, video_id: str, title: str, description: str, tags: list[str], category_id: str = "20"):
+    """Update title, description, and tags for an uploaded video."""
+    body = {
+        "id": video_id,
+        "snippet": {
+            "title": title[:100],
+            "description": description,
+            "tags": tags,
+            "categoryId": category_id,
+        },
+    }
+    _service(creds).videos().update(part="snippet", body=body).execute()
+    logger.info("Updated video %s metadata (title, description, tags)", video_id)
+
